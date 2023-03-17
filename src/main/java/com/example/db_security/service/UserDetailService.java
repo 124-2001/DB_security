@@ -8,17 +8,18 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.Set;
-
-public class UserDetailServiceImpl implements UserDetailsService {
+@Service
+public class UserDetailService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username).get();
         if (user == null) {
             throw new UsernameNotFoundException("User not found with username: " + username);
         }
@@ -32,5 +33,14 @@ public class UserDetailServiceImpl implements UserDetailsService {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
         });
         return authorities;
+    }
+
+    public UserDetails loadUserById(int userId) {
+        User user = userRepository.findById(userId).get();
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with username id: " + userId);
+        }
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
+                getAuthority(user));
     }
 }
